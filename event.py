@@ -6,6 +6,7 @@ class Event(object):
     """
     pass
 
+
 class MarketEvent(Event):
     """
     Handles the event of receiving a new market update with
@@ -17,6 +18,7 @@ class MarketEvent(Event):
         Initialises the MarketEvent.
         """
         self.type = 'MARKET'
+
 
 class SignalEvent(Event):
     """
@@ -34,9 +36,10 @@ class SignalEvent(Event):
         """
 
         self.type = 'SIGNAL'
-        self.symbol= symbol
+        self.symbol = symbol
         self.datetime = datetime
         self.signal_type = signal_type
+
 
 class OrderEvent(Event):
     """
@@ -64,12 +67,13 @@ class OrderEvent(Event):
         self.quantity = quantity
         self.direction = direction
 
-     def print_order(self):
-         """
+    def print_order(self):
+        """
          Outputs the values within the Order.
          """
-         print("Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % \
-               (self.symbol, self.order_type, self.quantity, self.direction))
+        print("Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % \
+              (self.symbol, self.order_type, self.quantity, self.direction))
+
 
 class FillEvent(Event):
     """
@@ -125,8 +129,8 @@ class FillEvent(Event):
         """
 
         if self.quantity <= 500:
-            full_cost = max(1.3, 0.013*self.quantity)
-        else: # Greater than 500
-            full_cost = max(1.3, 0.008*self.quantity)
+            full_cost = max(1.3, 0.013 * self.quantity)
+        else:  # Greater than 500
+            full_cost = max(1.3, 0.008 * self.quantity)
         full_cost = min(full_cost, 0.5 / 100 * self.quantity * self.fill_cost)
         return full_cost
