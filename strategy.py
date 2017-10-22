@@ -77,7 +77,7 @@ class BuyAndHoldStrategy(Strategy):
         """
         if event.type == 'MARKET':
             for s in self.symbol_list:
-                bars = self.barg.get_latest_bars(s, N-1)
+                bars = self.bars.get_latest_bars(s, N-1)
                 if bars is not None and bars != []:
                     if self.bought[s] == False:
                         # (Symbol, Datetime, Type = LONG, SHORT or EXIT)
