@@ -3,6 +3,7 @@ import queue
 from unittest import TestCase
 from nose.tools import ok_, eq_
 
+from event import MarketEvent
 
 class TestMarketEvent(TestCase):
 
