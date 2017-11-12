@@ -4,6 +4,7 @@ import pandas as pd
 
 from abc import ABCMeta, abstractmethod
 
+from price_parser import PriceParser
 from event import MarketEvent
 
 class DataHandler(object):
@@ -41,7 +42,7 @@ class DataHandler(object):
         """
         raise NotImplementedError("Shhould implement update_bars()")
 
-class HistoricCSDataHandler(DataHandler):
+class HistoricCSVDataHandler(DataHandler):
     """
     HistoricCSVDataHandler is designed to read CSV files for
     each requested symbol from disk and provide an interface
@@ -63,43 +64,81 @@ class HistoricCSDataHandler(DataHandler):
         """
         self.events = events
         self.csv_dir = csv_dir
-        self.symbol = symbol_list
-
-        self.symbol_data = {}
-        self.latest_symbol_data = {}
         self.continue_backtest = True
 
-        self._open_convert_csv_files()
+        self.symbols = {}
+        self.symbol_data = {}
+        if symbol_list is not None:
+            for symbol in symbol_list:
+                self.subscribe_symbol(symbol)
+        self.bar_stream = self._merge_sort_symbol_data()
 
-    def _open_convert_csv_files(self):
+    def subscribe_symbol(self, symbol):
+        """
+        Subscribes the price handler to a new symbol
+        :param symbol:
+        :return:
+        """
+        if symbol not in self.symbols:
+            try:
+                self._open_convert_csv_files(symbol)
+                dft = self.symbol_data[symbol]
+                row0 = dft.iloc[0]
+
+                close = PriceParser.parse(row0['close'])
+                adj_close = PriceParser.parse(row0['adj close'])
+
+                symbol_prices = {
+                    'close': close,
+                    'adj_close': adj_close,
+                    'timestamp': dft.index[0]
+                }
+                self.symbols[symbol] = symbol_prices
+            except OSError:
+                print(
+                    'Could not subscribe symbol %s'
+                    'as no data CSV found for pricing.' % symbol
+                )
+        else:
+            print(
+                'Could not subscribe symbol %s'
+                'as is already subscribed.' % symbol
+            )
+
+    def _open_convert_csv_files(self, symbol):
         """
         Opens the CSV files from the data directory, converting
         them into pandas DataFrames within a symbol dictionary.
 
         For this handler it will be assumed that the data is
-        taken from DTN IQFeed. Thus its format will be respected.
+        taken from Yahoo finance. Thus its format will be respected.
         :return:
         """
-        comb_index = None
-        for s in self.symbol_list:
-            # Load the CSV file with no header information, indexed on date
-            self.symbol_data[s] = pd.io.parsers.read_csv(
-                                        os.path.join(self.csv_dir, '%s.csv' % s),
-                                        header=0, index_col=0,
-                                        names=['datetime', 'open', 'low', 'high', 'close', 'volume', 'oi']
+        symbol_path = os.path.join(self.csv_dir, '%s.csv' % symbol)
+
+        # Load the CSV file with no header information, indexed on date
+        self.symbol_data[symbol] = pd.read_csv(
+                                        symbol_path, header=0,
+                                        names=['datetime', 'open', 'high', 'low', 'close', 'adj close', 'volume'],
+                                        index_col='datetime', parse_dates=True
                                         )
-            # Combine the index to pad forward values
-            if comb_index is None:
-                comb_index = self.symbol_data[s].index
-            else:
-                comb_index.union(self.symbol_data[s].index)
+        self.symbol_data[symbol]['Symbol'] = symbol
 
-            # Set the latest symbol data to None
-            self.latest_symbol_data[s] = []
+    def _merge_sort_symbol_data(self):
+        """
+        Concatenates all of the separate equities DataFrames
+        into a single DataFrame that is time ordered, allowing tick
+        data events to be added to the queue in a chronological fashion.
+        Note that this is an idealised situation, utilised solely for
+        backtesting. In live trading ticks may arrive "out of order".
+        """
 
-        # Reindex the dataframes
-        for s in self.symbol_list:
-            self.symbol_data[s] = self.symbol_data[s].reindex(index=comb_index, method='pad').iterrows()
+        df = pd.concat(self.symbol_data.values()).sort_index()
+        start = None
+        end = None
+        if start is None and end is None:
+            return df.iterrows()
+
 
     def _get_new_bar(self, symbol):
         """
@@ -123,7 +162,7 @@ class HistoricCSDataHandler(DataHandler):
         try:
             bars_list = self.latest_symbol_data[symbol]
         except KeyError:
-            print "That symbol is not available in the historical data set."
+            print("That symbol is not available in the historical data set.")
         else:
             return bars_list[-N:]
 
