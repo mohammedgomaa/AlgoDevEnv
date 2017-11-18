@@ -1,24 +1,56 @@
+from enum import Enum
+
+EventType = Enum('EventType', 'TICK BAR SIGNAL ORDER FILL SENTIMENT')
+
+
 class Event(object):
     """
     Event is base class providing an interface for all subsequent
     (inherited) event, that will trigger further events in the
     trading infrastructure.
     """
-    pass
+    @property
+    def typename(self):
+        return self.type.name
 
 
-class MarketEvent(Event):
+class TickEvent(Event):
     """
-    Handles the event of receiving a new market update with
-    corresponding bars.
+    Handles the event of receiving a new market update tick,
+    which is defined as a ticker symbol and associated best
+    bid and ask from the top of the order book.
     """
 
-    def __init__(self):
+    def __init__(self, ticker, time, bid, ask):
         """
-        Initialises the MarketEvent.
+        Initialises the TickEvent.
+        :param ticker: The ticker symbol, e.g. 'GOOG'.
+        :param time: The timestamp of the tick.
+        :param bid: The best bid price at the time of the tick.
+        :param ask: The best ask price at the time of the tick.
         """
-        self.type = 'MARKET'
+        self.type = EventType.TICK
+        self.ticker = ticker
+        self.time = time
+        self.bid = bid
+        self.ask = ask
 
+    def __str__(self):
+        return 'Type: %s, Ticker: %s, Time: %s, Bid: %s, Ask: %s' %(
+            str(self.type), str(self.ticker),
+            str(self.time), str(self.bid), str(self.ask)
+        )
+
+    def __repr__(self):
+        return str(self)
+
+
+class BarEvent(Event):
+    """
+    Handles the event of receiving a new market
+    open-high-low-close-volume bar, as would be generated
+    via common data providers such as Yahoo Finance.
+    """
 
 class SignalEvent(Event):
     """
