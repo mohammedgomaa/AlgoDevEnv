@@ -52,25 +52,31 @@ class BarEvent(Event):
     via common data providers such as Yahoo Finance.
     """
 
+
 class SignalEvent(Event):
     """
     Handles the event of sending a Signal from a Strategy object.
     This is received by a Portfolio object and acted upon.
     """
 
-    def __init__(self, symbol, datetime, signal_type):
+    def __init__(self, ticker, buy_sell, suggested_quantity=None, datetime=None):
         """
         Initialises the SignalEvent.
 
-        :param str symbol: The ticker symbol, e.g. 'GOOG'.
+        :param str ticker: The ticker symbol, e.g. 'GOOG'.
+        :param str buy_sell: 'Buy' or 'Sell'.
+        :param int suggested_quantity: Optional positively valued integer
+                        representing a suggested absolute quantity of units
+                        of an asset to transact in, which is used by the
+                        PositionSizer and RiskManger.
         :param timestamp datetime: The timestamp at which the signal was generated.
-        :param str signal_type: 'Long' or 'Short'.
         """
 
-        self.type = 'SIGNAL'
-        self.symbol = symbol
+        self.type = EventType.SIGNAL
+        self.ticker = ticker
+        self.buy_sell = buy_sell
+        self.suggested_quantity = suggested_quantity
         self.datetime = datetime
-        self.signal_type = signal_type
 
 
 class OrderEvent(Event):
@@ -80,31 +86,34 @@ class OrderEvent(Event):
     quantity and a direction
     """
 
-    def __init__(self, symbol, order_type, quantity, direction):
+    def __init__(self, ticker, buy_sell, quantity, order_type):
         """
         Initialises the order type, setting whether it is
         a Market order ('MKT') or Limit order('LMT'), has
         a quantity (integral) and its direction ('BUY' or
         'SELL').
 
-        :param str symbol: The instrument to trade.
-        :param str order_type: 'MKT' or 'LMT' for Market or Limit.
+        :param str ticker: The ticker symbol, e.g. 'GOOG'.
+        :param str buy_sell: 'Buy' or 'Sell'.
         :param int quantity: Non-negative integer for quantity.
-        :param str direction: 'BUY' or 'SELL' for long or short.
+        :param str order_type: 'MKT' or 'LMT' for Market or Limit.
         """
 
-        self.type = 'ORDER'
-        self.symbol = symbol
-        self.order_type = order_type
+        self.type = EventType.ORDER
+        self.ticker = ticker
+        self.buy_sell = buy_sell
         self.quantity = quantity
-        self.direction = direction
+        self.order_type = order_type
 
     def print_order(self):
         """
-         Outputs the values within the Order.
+         Outputs the values within the OrderEvent.
          """
-        print("Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % \
-              (self.symbol, self.order_type, self.quantity, self.direction))
+        print(
+            "Order: Ticker=%s, BuySell=%s, Quantity=%s, OrderType=%s" % (
+                self.ticker, self.buy_sell, self.quantity, self.order_type
+            )
+        )
 
 
 class FillEvent(Event):
