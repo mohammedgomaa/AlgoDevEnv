@@ -17,7 +17,7 @@ class AbstractPriceHandler(object):
 
     __metaclass__ = ABCMeta
 
- def unsubscribe_ticker(self, ticker):
+    def unsubscribe_ticker(self, ticker):
         """
         Unsubscribes the price handler from a current ticker symbol.
         """
