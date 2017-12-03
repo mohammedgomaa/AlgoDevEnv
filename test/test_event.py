@@ -1,9 +1,7 @@
 import pandas as pd
 import queue
 from unittest import TestCase
-from nose.tools import ok_, eq_
 
-from price_parser import PriceParser
 from event import EventType, TickEvent
 
 
@@ -28,13 +26,13 @@ class TestTickEvent(TestCase):
         except queue.Empty:
             print('Error')
         else:
-            ok_(tick_event is not None)
-            ok_(tick_event.type == EventType.TICK)
+            self.assertTrue(tick_event is not None)
+            self.assertTrue(tick_event.type == EventType.TICK)
             self.assertAlmostEqual(tick_event.bid, 1.10999)
             self.assertAlmostEqual(tick_event.ask, 1.11004)
 
 
-class TestSignalEvent(TestCase)
+class TestSignalEvent(TestCase):
 
     """
 
@@ -55,7 +53,7 @@ class TestSignalEvent(TestCase)
         except queue.Empty:
             print('Error')
         else:
-            ok_(tick_event is not None)
-            ok_(tick_event.type == EventType.TICK)
+            self.assertTrue(tick_event is not None)
+            self.assertTrue(tick_event.type == EventType.TICK)
             self.assertAlmostEqual(tick_event.bid, 1.10999)
             self.assertAlmostEqual(tick_event.ask, 1.11004)
