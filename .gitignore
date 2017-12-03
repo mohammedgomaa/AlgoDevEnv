@@ -1,3 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 .gitignore
 .idea/
+backtest/
+config/
+sampledata/
+/test/test_oanda_streaming.py
